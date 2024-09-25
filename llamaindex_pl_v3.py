@@ -43,8 +43,8 @@ class Pipeline:
 
     def __init__(self):
         self.llm = None
-        self.id = "nchc-beta-lamaindex"
-        self.name = "nchc-beta-lamaindex"
+        self.id = "nchc-rag-beta"
+        self.name = "nchc-rag-beta"
         
         self.valves = self.Valves(
             **{
@@ -54,8 +54,6 @@ class Pipeline:
                 "Qdrant_BASE_URL": os.getenv("Qdrant_BASE_URL", "http://172.17.0.1:6333"),
                 "Qdrant_VectorStore": os.getenv("Qdrant_VectorStore", "20240906_ly_256"),
                 "Flag_Embedding_Reranker": os.getenv("Flag_Embedding_Reranker", "BAAI/bge-reranker-large"),
-                
-
             }
         )
 
@@ -66,8 +64,6 @@ class Pipeline:
 
         # self.documents = SimpleDirectoryReader("/app/backend/data").load_data()
         # self.index = VectorStoreIndex.from_documents(self.documents)
-
-
 
         Settings.embed_model = OllamaEmbedding(
             model_name=self.valves.LLAMAINDEX_EMBEDDING_MODEL_NAME,
@@ -90,11 +86,11 @@ class Pipeline:
         self.llm = Ollama(
             model=self.valves.LLAMAINDEX_MODEL_NAME,
             base_url=self.valves.LLAMAINDEX_OLLAMA_BASE_URL,
+            temperature=0,
+            request_timeout=600.0,
             additional_kwargs={"keep_alive": -1}
         )
         
-
-
         print('=============  ollama setting finished =============')
 
 
@@ -102,7 +98,7 @@ class Pipeline:
 
         self.retriever_engine = index.as_retriever(
             retriever_mode='embeddings',
-            similarity_top_k=2,
+            similarity_top_k=10,
             node_postprocessors=[reranker],
             verbose=True
         )
